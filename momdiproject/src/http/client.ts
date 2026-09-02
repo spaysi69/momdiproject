@@ -1,0 +1,248 @@
+import axios, { AxiosError, AxiosInstance } from 'axios';
+import { z } from 'zod';
+import { EnrichmentResponse } from '../core/types';
+
+const ResearchAcceptedSchema = z.object({
+  success: z.boolean().optional(),
+  requestIds: z.array(z.string().min(1)).min(1),
+});
+
+const PollEnvelopeSchema = z.object({
+  success: z.boolean().optional(),
+  data: z.array(z.object({
+    requestId: z.string().optional(),
+    searchResultId: z.string().optional(),
+    status: z.string(),
+    message: z.string().optional(),
+    contact: z.record(z.string(), z.any()).optional(),
+    additionalData: z.record(z.string(), z.any()).optional(),
+  })).min(1),
+});
+
+const SearchResultSchema = z.record(z.string(), z.any());
+const SearchEnvelopeSchema = z.object({
+  data: z.array(SearchResultSchema).default([]),
+  supplementalData: z.object({
+    isMore: z.boolean().optional(),
+    total: z.number().optional(),
+    perPage: z.number().optional(),
+    nextToken: z.string().nullable().optional(),
+  }).optional(),
+});
+
+export interface SeamlessClientOptions {
+  baseUrl: string;
+  apiKey: string;
+  timeoutMs: number;
+  pollIntervalMs: number;
+  maxPolls: number;
+}
+
+export interface CompanySearchResult {
+  searchResultId?: string;
+  name?: string;
+  domain?: string;
+  description?: string;
+  liUrl?: string;
+  companyLIURL?: string;
+  companyLinkedInUrl?: string;
+  staffCount?: string | number;
+  staffCountRange?: string;
+  employeeCount?: string | number;
+  numContacts?: string | number;
+  industry?: string;
+  industries?: string[];
+  country?: string;
+  city?: string;
+  state?: string;
+  [key: string]: unknown;
+}
+
+export interface ContactSearchResult {
+  searchResultId: string;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  company?: string;
+  title?: string;
+  department?: string;
+  seniority?: string;
+  domain?: string;
+  liUrl?: string;
+  companyLIProfileUrl?: string;
+  companyDomainAlias?: string;
+  city?: string;
+  state?: string;
+  country?: string;
+  [key: string]: unknown;
+}
+
+function stringOrUndefined(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
+function firstString(...values: unknown[]): string | undefined {
+  for (const value of values) {
+    const result = stringOrUndefined(value);
+    if (result) return result;
+  }
+  return undefined;
+}
+
+function mapContact(contact: Record<string, any>, fallbackLinkedInUrl?: string): EnrichmentResponse {
+  const firstName = firstString(contact.firstName, contact.first_name);
+  const lastName = firstString(contact.lastName, contact.last_name);
+  const fullName = firstString(contact.fullName, contact.full_name, contact.name) ?? ([firstName, lastName].filter(Boolean).join(' ') || undefined);
+  const linkedinUrl = firstString(contact.lIProfileUrl, contact.liProfileUrl, contact.linkedinUrl, contact.linkedin_url, fallbackLinkedInUrl);
+
+  return {
+    id: firstString(contact.contactId, contact.id),
+    fullName,
+    firstName,
+    lastName,
+    title: firstString(contact.title, contact.jobTitle),
+    company: firstString(contact.company, contact.companyName),
+    email: firstString(contact.email, contact.email1),
+    phone: firstString(contact.contactPhone1, contact.phone),
+    linkedinUrl: linkedinUrl ?? '',
+    department: firstString(contact.department),
+    seniority: firstString(contact.seniority),
+    alternateEmails: [contact.email2, contact.email3, contact.personalEmail].map(stringOrUndefined).filter((v): v is string => Boolean(v)),
+    alternatePhones: [contact.contactPhone2, contact.companyPhone1, contact.companyPhone2, contact.companyPhone3].map(stringOrUndefined).filter((v): v is string => Boolean(v)),
+    companyDomain: firstString(contact.companyDomain, contact.website, contact.companyWebsite),
+    companyLinkedInUrl: firstString(contact.companyLIProfileUrl, contact.companyLinkedInUrl),
+    contactLocation: contact.contactLocation && typeof contact.contactLocation === 'object' ? contact.contactLocation : undefined,
+    companyLocation: contact.companyLocation && typeof contact.companyLocation === 'object' ? contact.companyLocation : undefined,
+    raw: contact,
+  };
+}
+
+function providerErrorMessage(error: AxiosError | { data?: unknown; message?: string }): string {
+  const body = (error as any).response?.data ?? (error as any).data;
+  if (body && typeof body === 'object') {
+    return String((body as any).msg ?? (body as any).message ?? (body as any).error ?? (error as any).message ?? 'Provider request failed');
+  }
+  return (error as any).message ?? 'Provider request failed';
+}
+
+export class SeamlessClient {
+  private readonly client: AxiosInstance;
+  constructor(private readonly options: SeamlessClientOptions) {
+    this.client = axios.create({
+      baseURL: options.baseUrl.replace(/\/$/, ''),
+      timeout: options.timeoutMs,
+      headers: {
+        'Content-Type': 'application/json',
+        Token: options.apiKey,
+      },
+      validateStatus: () => true,
+    });
+  }
+
+  private throwIfBad(response: any, acceptedStatus: number, label: string): void {
+    if (response.status !== acceptedStatus) {
+      const error = new Error(providerErrorMessage(response));
+      (error as any).response = response;
+      (error as any).context = label;
+      throw error;
+    }
+  }
+
+  async searchCompanies(query: string, limit = 20): Promise<{ companies: CompanySearchResult[]; total?: number; nextToken?: string | null }> {
+    const response = await this.client.post('/search/companies', {
+      nextToken: null,
+      limit: Math.min(Math.max(1, limit), 50),
+      companyName: [query],
+      companyNameSearchType: 'default',
+    });
+    this.throwIfBad(response, 200, 'company search');
+    const parsed = SearchEnvelopeSchema.parse(response.data);
+    return {
+      companies: parsed.data.map(item => item as CompanySearchResult),
+      total: parsed.supplementalData?.total,
+      nextToken: parsed.supplementalData?.nextToken,
+    };
+  }
+
+  async searchContacts(input: { companyName?: string; companyDomain?: string; limit?: number; nextToken?: string | null }): Promise<{ contacts: ContactSearchResult[]; total?: number; nextToken?: string | null }> {
+    const body: Record<string, unknown> = {
+      nextToken: input.nextToken ?? null,
+      limit: Math.min(Math.max(1, input.limit ?? 20), 100),
+    };
+    if (input.companyName?.trim()) body.companyName = [input.companyName.trim()];
+    if (input.companyDomain?.trim()) body.companyDomain = [input.companyDomain.trim().replace(/^https?:\/\//, '').replace(/\/$/, '')];
+    if (!body.companyName && !body.companyDomain) throw new Error('A company name or company domain is required.');
+
+    const response = await this.client.post('/search/contacts', body);
+    this.throwIfBad(response, 200, 'contact search');
+    const parsed = SearchEnvelopeSchema.parse(response.data);
+    return {
+      contacts: parsed.data
+        .filter(item => stringOrUndefined(item.searchResultId))
+        .map(item => item as ContactSearchResult),
+      total: parsed.supplementalData?.total,
+      nextToken: parsed.supplementalData?.nextToken,
+    };
+  }
+
+  async researchContactBySearchResultId(searchResultId: string, skipDeduplicationCheck = false, onAccepted?: () => Promise<void>): Promise<EnrichmentResponse> {
+    const accepted = await this.client.post('/contacts/research', {
+      searchResultIds: [searchResultId],
+      skipDeduplicationCheck,
+    });
+    this.throwIfBad(accepted, 202, 'contact research');
+    const parsed = ResearchAcceptedSchema.parse(accepted.data);
+    if (onAccepted) await onAccepted();
+    const requestId = parsed.requestIds[0];
+
+    for (let poll = 1; poll <= this.options.maxPolls; poll += 1) {
+      const response = await this.client.get('/contacts/research/poll', {
+        params: { requestIds: requestId },
+      });
+      this.throwIfBad(response, 200, 'contact research poll');
+      const result = PollEnvelopeSchema.parse(response.data).data[0];
+      const status = result.status.toLowerCase();
+      if (status === 'done' || status === 'duplicate') {
+        if (!result.contact) throw new Error('Seamless returned a completed result without contact data');
+        return mapContact(result.contact);
+      }
+      if (status === 'missing') throw new Error('Seamless could not find this contact');
+      if (status === 'error') throw new Error(result.message || 'Seamless contact research failed');
+      await new Promise(resolve => setTimeout(resolve, this.options.pollIntervalMs));
+    }
+
+    const error = new Error('Seamless contact research timed out while polling');
+    (error as any).code = 'ETIMEDOUT';
+    throw error;
+  }
+
+  async researchContactByLinkedInUrl(linkedinUrl: string, skipDeduplicationCheck = false): Promise<EnrichmentResponse> {
+    const accepted = await this.client.post('/contacts/research', {
+      contacts: [{ liProfileUrl: linkedinUrl }],
+      skipDeduplicationCheck,
+    });
+    this.throwIfBad(accepted, 202, 'contact research');
+    const parsed = ResearchAcceptedSchema.parse(accepted.data);
+    const requestId = parsed.requestIds[0];
+
+    for (let poll = 1; poll <= this.options.maxPolls; poll += 1) {
+      const response = await this.client.get('/contacts/research/poll', {
+        params: { requestIds: requestId },
+      });
+      this.throwIfBad(response, 200, 'contact research poll');
+      const result = PollEnvelopeSchema.parse(response.data).data[0];
+      const status = result.status.toLowerCase();
+      if (status === 'done' || status === 'duplicate') {
+        if (!result.contact) throw new Error('Seamless returned a completed result without contact data');
+        return mapContact(result.contact, linkedinUrl);
+      }
+      if (status === 'missing') throw new Error('Seamless could not find this LinkedIn profile');
+      if (status === 'error') throw new Error(result.message || 'Seamless research failed');
+      await new Promise(resolve => setTimeout(resolve, this.options.pollIntervalMs));
+    }
+
+    const error = new Error('Seamless research timed out while polling');
+    (error as any).code = 'ETIMEDOUT';
+    throw error;
+  }
+}
