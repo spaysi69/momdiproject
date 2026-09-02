@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b1020" />
+  <title>Enrichment Studio</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #070a12;
+      --panel: rgba(15, 20, 35, .82);
+      --panel-2: rgba(20, 27, 47, .86);
+      --border: rgba(255,255,255,.09);
+      --text: #f6f7fb;
+      --muted: #9aa4bd;
+      --muted-2: #68728a;
+      --accent: #7c5cff;
+      --accent-2: #9d88ff;
+      --green: #35d39a;
+      --yellow: #f6c85f;
+      --red: #ff647c;
+      --shadow: 0 24px 80px rgba(0,0,0,.35);
+    }
+    * { box-sizing: border-box; }
+    html { min-height: 100%; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(900px 520px at 12% -5%, rgba(124,92,255,.22), transparent 60%),
+        radial-gradient(750px 460px at 92% 10%, rgba(47,183,255,.11), transparent 60%),
+        linear-gradient(180deg, #0a0d16 0%, #070a12 100%);
+    }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .shell { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 44px; }
+    .topbar { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:22px; }
+    .brand { display:flex; align-items:center; gap:12px; }
+    .logo {
+      width:42px; height:42px; border-radius:13px; display:grid; place-items:center;
+      background: linear-gradient(135deg, var(--accent), #4c7dff);
+      box-shadow: 0 10px 32px rgba(124,92,255,.34);
+      font-weight:800; letter-spacing:-.04em;
+    }
+    .brand h1 { font-size:18px; margin:0; letter-spacing:-.02em; }
+    .brand p { margin:2px 0 0; color:var(--muted); font-size:12px; }
+    .status-pill { display:flex; align-items:center; gap:8px; padding:8px 11px; border:1px solid var(--border); background:rgba(255,255,255,.035); border-radius:999px; color:var(--muted); font-size:12px; }
+    .dot { width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 0 4px rgba(53,211,154,.12); }
+    .dot.warn { background:var(--yellow); box-shadow:0 0 0 4px rgba(246,200,95,.11); }
+    .dot.bad { background:var(--red); box-shadow:0 0 0 4px rgba(255,100,124,.11); }
+    .layout { display:grid; grid-template-columns:minmax(0, 1.35fr) minmax(300px, .65fr); gap:18px; }
+    .card { border:1px solid var(--border); background:var(--panel); backdrop-filter: blur(22px); border-radius:22px; box-shadow:var(--shadow); }
+    .hero { padding:30px; min-height:585px; display:flex; flex-direction:column; }
+    .eyebrow { display:inline-flex; gap:8px; align-items:center; color:#b7aaff; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.12em; }
+    .hero h2 { margin:12px 0 10px; font-size:clamp(30px, 4vw, 52px); line-height:.98; letter-spacing:-.055em; max-width:690px; }
+    .hero .sub { margin:0; max-width:640px; color:var(--muted); line-height:1.6; font-size:15px; }
+    .form { margin-top:30px; }
+    .label-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:9px; }
+    label { font-size:12px; font-weight:700; color:#dfe4f0; }
+    .hint { color:var(--muted-2); font-size:11px; }
+    .input-wrap { position:relative; }
+    input[type=url], input[type=password] {
+      width:100%; height:56px; border:1px solid rgba(255,255,255,.1); border-radius:15px; padding:0 15px;
+      color:var(--text); background:rgba(0,0,0,.18); outline:none; transition:.2s ease;
+    }
+    input:focus { border-color:rgba(124,92,255,.75); box-shadow:0 0 0 4px rgba(124,92,255,.12); }
+    .actions { display:flex; gap:10px; margin-top:12px; }
+    .primary, .secondary {
+      height:48px; border-radius:14px; border:1px solid var(--border); padding:0 17px; transition:.2s ease;
+    }
+    .primary { flex:1; color:white; border-color:transparent; background:linear-gradient(135deg, var(--accent), #5c8bff); box-shadow:0 12px 28px rgba(92,110,255,.22); font-weight:800; }
+    .primary:hover { transform:translateY(-1px); filter:brightness(1.06); }
+    .primary:disabled { cursor:not-allowed; opacity:.56; transform:none; }
+    .secondary { background:rgba(255,255,255,.04); color:#e9ecf4; }
+    .secondary:hover { background:rgba(255,255,255,.07); }
+    .auth { margin-top:18px; padding-top:18px; border-top:1px solid var(--border); }
+    .auth summary { list-style:none; cursor:pointer; color:var(--muted); font-size:12px; }
+    .auth summary::-webkit-details-marker { display:none; }
+    .auth-grid { display:grid; grid-template-columns:1fr auto; gap:9px; margin-top:12px; }
+    .save-note { margin-top:7px; font-size:10px; color:var(--muted-2); }
+    .result { margin-top:24px; border:1px solid var(--border); background:rgba(255,255,255,.025); border-radius:17px; overflow:hidden; min-height:170px; }
+    .result-head { display:flex; justify-content:space-between; align-items:center; padding:14px 16px; border-bottom:1px solid var(--border); }
+    .result-title { font-size:12px; font-weight:800; }
+    .result-meta { font-size:10px; color:var(--muted-2); }
+    .result-body { padding:18px; }
+    .empty { color:var(--muted-2); font-size:13px; line-height:1.6; text-align:center; padding:25px 16px; }
+    .loader { display:flex; align-items:center; gap:10px; color:var(--muted); font-size:13px; padding:4px 0; }
+    .spinner { width:18px; height:18px; border:2px solid rgba(255,255,255,.12); border-top-color:#9d88ff; border-radius:50%; animation:spin .8s linear infinite; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .error { color:#ffb5c0; background:rgba(255,100,124,.06); border:1px solid rgba(255,100,124,.13); padding:12px 13px; border-radius:12px; font-size:12px; line-height:1.5; }
+    .profile { display:grid; gap:12px; }
+    .identity { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; }
+    .name { margin:0; font-size:22px; letter-spacing:-.025em; }
+    .title { color:var(--muted); margin:3px 0 0; font-size:13px; }
+    .badge { padding:6px 8px; border-radius:999px; font-size:10px; border:1px solid rgba(53,211,154,.18); color:#8ff1ca; background:rgba(53,211,154,.06); }
+    .facts { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .fact { padding:12px; border:1px solid var(--border); border-radius:13px; background:rgba(255,255,255,.022); }
+    .fact span { display:block; font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted-2); margin-bottom:5px; }
+    .fact strong { display:block; font-size:12px; color:#e7eaf1; overflow-wrap:anywhere; }
+    .sidebar { display:flex; flex-direction:column; gap:18px; }
+    .side-card { padding:21px; }
+    .side-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+    .side-head h3 { margin:0; font-size:13px; letter-spacing:.01em; }
+    .tiny { color:var(--muted-2); font-size:10px; }
+    .metrics { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+    .metric { padding:14px; border-radius:14px; background:rgba(255,255,255,.025); border:1px solid var(--border); }
+    .metric .v { font-size:24px; font-weight:800; letter-spacing:-.04em; }
+    .metric .k { color:var(--muted-2); font-size:10px; margin-top:3px; text-transform:uppercase; letter-spacing:.08em; }
+    .route { padding:14px; border-radius:14px; background:rgba(255,255,255,.025); border:1px solid var(--border); }
+    .route-top { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    .route-id { font-size:12px; font-weight:800; }
+    .route-state { font-size:10px; padding:5px 7px; border-radius:999px; background:rgba(53,211,154,.07); color:#8ff1ca; }
+    .bars { margin-top:12px; display:grid; gap:8px; }
+    .bar-row { display:grid; grid-template-columns:42px 1fr 34px; gap:8px; align-items:center; font-size:10px; color:var(--muted-2); }
+    .track { height:6px; background:rgba(255,255,255,.06); border-radius:999px; overflow:hidden; }
+    .fill { height:100%; border-radius:999px; background:linear-gradient(90deg, #6d56ff, #66a8ff); transition:width .4s ease; }
+    .footer { margin-top:auto; padding-top:20px; color:var(--muted-2); font-size:10px; display:flex; justify-content:space-between; gap:12px; }
+    @media (max-width: 900px) { .layout { grid-template-columns:1fr; } .hero { min-height:auto; } .sidebar { display:grid; grid-template-columns:1fr 1fr; } }
+    .auth-modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.62);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}.auth-modal-backdrop.open{display:flex}.auth-modal{width:min(100%,460px);background:var(--panel);border:1px solid var(--border);border-radius:22px;box-shadow:0 30px 80px rgba(0,0,0,.28);padding:24px}.auth-modal h3{margin:0 0 8px;font-size:22px}.auth-modal p{margin:0 0 18px;color:var(--muted);line-height:1.55}.auth-modal .modal-input{width:100%;box-sizing:border-box;padding:13px 14px;border-radius:12px;border:1px solid var(--border);background:var(--input);color:var(--text);outline:none}.auth-modal .modal-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(99,102,241,.15)}.auth-modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:14px}.auth-error{color:#dc2626;font-size:13px;min-height:18px;margin-top:8px}.auth-pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;background:var(--chip);color:var(--muted);font-size:12px;margin-left:auto}.auth-pill button{border:0;background:none;color:inherit;cursor:pointer;font:inherit}.auth-hint{font-size:12px;color:var(--muted);margin-top:7px} 
+    @media (max-width: 620px) { .shell{width:min(100% - 18px, 1180px); padding-top:14px;} .topbar{margin-bottom:14px;} .hero{padding:21px;} .sidebar{display:flex;} .facts{grid-template-columns:1fr;} .actions{flex-direction:column;} .auth-grid{grid-template-columns:1fr;} .hero h2{font-size:36px;} }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">E</div>
+        <div><h1>Enrichment Studio</h1><p>Profile intelligence workspace</p></div>
+      </div>
+      <div id="serviceStatus" class="status-pill"><span class="dot"></span><span>Checking service…</span></div>
+    </header>
+
+    <section class="layout">
+      <div class="card hero">
+        <div>
+          <div class="eyebrow">● Profile enrichment</div>
+          <h2>Turn a LinkedIn profile into useful data.</h2>
+          <p class="sub">Paste a public LinkedIn profile URL and get the available enrichment fields with clear status, caching, and request feedback.</p>
+        </div>
+
+        <form id="enrichForm" class="form">
+          <div class="label-row"><label for="url">LinkedIn profile URL</label><span class="hint">Public profile URL</span></div>
+          <div class="input-wrap"><input id="url" type="url" autocomplete="url" placeholder="https://www.linkedin.com/in/example" required /></div>
+          <div class="actions">
+            <button id="submitBtn" class="primary" type="submit">Enrich profile</button>
+            <button id="clearBtn" class="secondary" type="button">Clear</button>
+          </div>
+        </form>
+
+        <details class="auth">
+          <summary>API access token</summary>
+          <div class="auth-grid">
+            <input id="token" type="password" autocomplete="off" placeholder="Paste your APP_AUTH_TOKEN" />
+            <button id="saveToken" class="secondary" type="button">Save</button>
+          </div>
+          <div class="save-note">Stored only in this browser's local storage. Never shown in results.</div>
+        </details>
+
+        <section class="result" aria-live="polite">
+          <div class="result-head"><span class="result-title">Enrichment result</span><span id="resultMeta" class="result-meta">Ready</span></div>
+          <div id="resultBody" class="result-body"><div class="empty">Your enriched profile will appear here.</div></div>
+        </section>
+
+        <div class="footer"><span>Built for reliability</span><span id="lastUpdated">—</span></div>
+      </div>
+
+      <aside class="sidebar">
+        <div class="card side-card">
+          <div class="side-head"><h3>Live service</h3><span id="refreshLabel" class="tiny">auto</span></div>
+          <div class="metrics">
+            <div class="metric"><div id="rpm" class="v">—</div><div class="k">RPM remaining</div></div>
+            <div class="metric"><div id="rpd" class="v">—</div><div class="k">Daily remaining</div></div>
+          </div>
+        </div>
+
+        <div class="card side-card">
+          <div class="side-head"><h3>Route health</h3><span id="routeUpdated" class="tiny">waiting</span></div>
+          <div class="route">
+            <div class="route-top"><span id="routeId" class="route-id">primary</span><span id="routeState" class="route-state">UNKNOWN</span></div>
+            <div class="bars">
+              <div class="bar-row"><span>RPM</span><div class="track"><div id="rpmBar" class="fill" style="width:0%"></div></div><span id="rpmPct">—</span></div>
+              <div class="bar-row"><span>RPD</span><div class="track"><div id="rpdBar" class="fill" style="width:0%"></div></div><span id="rpdPct">—</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card side-card">
+          <div class="side-head"><h3>How it works</h3></div>
+          <div class="tiny" style="line-height:1.7">Requests are validated, normalized, cached when possible, checked against the authorized quota, and sent through the provider adapter. Transient provider failures are retried with bounded backoff.</div>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <div id="authModal" class="auth-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <div class="auth-modal">
+      <h3 id="authTitle">Connect to your service</h3>
+      <p>This hosted app is protected. Enter the <strong>APP_AUTH_TOKEN</strong> you configured in Render. It stays in this browser only.</p>
+      <input id="modalToken" class="modal-input" type="password" autocomplete="off" placeholder="Paste your APP_AUTH_TOKEN" />
+      <div id="authError" class="auth-error" aria-live="polite"></div>
+      <div class="auth-hint">You can change or clear the token later from “API access token”.</div>
+      <div class="auth-modal-actions"><button id="modalCancel" class="secondary" type="button">Cancel</button><button id="modalSave" class="primary" type="button">Connect</button></div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+    const tokenInput = $('token');
+    const authModal = $('authModal');
+    const modalToken = $('modalToken');
+    const authError = $('authError');
+    const savedToken = localStorage.getItem('enrichment_token');
+    if (savedToken) tokenInput.value = savedToken;
+
+    function openAuthModal(message='') {
+      authError.textContent = message;
+      modalToken.value = tokenInput.value.trim();
+      authModal.classList.add('open');
+      setTimeout(() => modalToken.focus(), 0);
+    }
+
+    function closeAuthModal() { authModal.classList.remove('open'); }
+
+    function saveTokenValue(token) {
+      const value = token.trim();
+      tokenInput.value = value;
+      if (value) localStorage.setItem('enrichment_token', value); else localStorage.removeItem('enrichment_token');
+      $('resultMeta').textContent = value ? 'Token saved' : 'Token cleared';
+    }
+
+    $('saveToken').addEventListener('click', () => openAuthModal());
+    $('modalCancel').addEventListener('click', () => closeAuthModal());
+    $('modalSave').addEventListener('click', () => {
+      const token = modalToken.value.trim();
+      if (!token) { authError.textContent = 'Enter your APP_AUTH_TOKEN.'; modalToken.focus(); return; }
+      saveTokenValue(token); closeAuthModal(); refreshStatus();
+    });
+    modalToken.addEventListener('keydown', e => { if (e.key === 'Enter') $('modalSave').click(); if (e.key === 'Escape') closeAuthModal(); });
+    authModal.addEventListener('click', e => { if (e.target === authModal) closeAuthModal(); });
+
+    $('clearBtn').addEventListener('click', () => {
+      $('url').value = '';
+      $('resultBody').innerHTML = '<div class="empty">Your enriched profile will appear here.</div>';
+      $('resultMeta').textContent = 'Ready';
+      $('url').focus();
+    });
+
+    function authHeaders() {
+      const token = tokenInput.value.trim();
+      return token ? { Authorization: 'Bearer ' + token } : {};
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+    }
+
+    function renderResult(payload) {
+      const data = payload?.data ?? payload;
+      const cached = payload?.cached;
+      const attempts = payload?.attempts;
+      if (!data || typeof data !== 'object') throw new Error('The service returned an unexpected response.');
+      const fullName = data.fullName || [data.firstName, data.lastName].filter(Boolean).join(' ') || 'Unknown profile';
+      const rows = [
+        ['Company', data.company], ['Title', data.title], ['Email', data.email], ['Phone', data.phone], ['LinkedIn', data.linkedinUrl]
+      ].filter(([,v]) => v);
+      $('resultBody').innerHTML = '<div class="profile">' +
+        '<div class="identity"><div><h3 class="name">' + escapeHtml(fullName) + '</h3><p class="title">' + escapeHtml(data.title || 'Profile enriched') + '</p></div>' +
+        '<span class="badge">' + (cached ? 'Cached' : 'Fresh') + '</span></div>' +
+        '<div class="facts">' + rows.map(([k,v]) => '<div class="fact"><span>' + escapeHtml(k) + '</span><strong>' + escapeHtml(v) + '</strong></div>').join('') + '</div>' +
+        '</div>';
+      $('resultMeta').textContent = (cached ? (payload?.source === 'supabase' ? 'Saved in database' : 'Cached') : 'Completed') + (attempts ? ' · ' + attempts + ' attempt' + (attempts === 1 ? '' : 's') : '');
+    }
+
+    async function enrich(url) {
+      const headers = { 'Content-Type': 'application/json', ...authHeaders() };
+      const response = await fetch('/v1/enrich', { method:'POST', headers, body: JSON.stringify({ linkedinUrl: url }) });
+      let body = null;
+      try { body = await response.json(); } catch {}
+      if (!response.ok) {
+        const err = new Error(body?.error || ('Request failed (' + response.status + ')'));
+        err.status = response.status;
+        throw err;
+      }
+      return body;
+    }
+
+    $('enrichForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const url = $('url').value.trim();
+      const btn = $('submitBtn');
+      if (!url) return;
+      btn.disabled = true;
+      btn.textContent = 'Enriching…';
+      $('resultMeta').textContent = 'Working';
+      $('resultBody').innerHTML = '<div class="loader"><span class="spinner"></span><span>Checking cache, quota and provider…</span></div>';
+      const started = performance.now();
+      try {
+        const payload = await enrich(url);
+        renderResult(payload);
+        $('lastUpdated').textContent = 'Completed in ' + Math.round(performance.now() - started) + ' ms';
+      } catch (error) {
+        if (error?.status === 401) {
+          $('resultMeta').textContent = 'Authentication required';
+          $('resultBody').innerHTML = '<div class="error">Your app token is missing or incorrect.</div>';
+          $('lastUpdated').textContent = 'Authentication failed';
+          openAuthModal('The token was rejected. Check APP_AUTH_TOKEN in Render and try again.');
+        } else {
+          $('resultMeta').textContent = 'Needs attention';
+          $('resultBody').innerHTML = '<div class="error">' + escapeHtml(error?.message || 'Something went wrong.') + '</div>';
+          $('lastUpdated').textContent = 'Request failed';
+        }
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Enrich profile';
+      }
+    });
+
+    function setServiceState(text, kind='') {
+      const dot = document.querySelector('#serviceStatus .dot');
+      dot.className = 'dot' + (kind ? ' ' + kind : '');
+      $('serviceStatus').lastElementChild.textContent = text;
+    }
+
+    async function refreshStatus() {
+      try {
+        const response = await fetch('/status', { headers: authHeaders() });
+        if (!response.ok) throw new Error('status ' + response.status);
+        const data = await response.json();
+        const route = data.route || {};
+        const usage = data.usage || {};
+        const rpmRemaining = Number(route.rpmRemaining ?? Math.max(0, (route.rpmLimit || 0) - (usage.rpm || 0)));
+        const rpdRemaining = Number(route.rpdRemaining ?? Math.max(0, (route.rpdLimit || 0) - (usage.rpd || 0)));
+        $('rpm').textContent = Number.isFinite(rpmRemaining) ? rpmRemaining.toLocaleString() : '—';
+        $('rpd').textContent = Number.isFinite(rpdRemaining) ? rpdRemaining.toLocaleString() : '—';
+        $('routeId').textContent = route.id || 'primary';
+        $('routeState').textContent = route.status || 'UNKNOWN';
+        const rpmLimit = Number(route.rpmLimit || 0), rpdLimit = Number(route.rpdLimit || 0);
+        const rpmPct = rpmLimit ? Math.round((rpmRemaining / rpmLimit) * 100) : 0;
+        const rpdPct = rpdLimit ? Math.round((rpdRemaining / rpdLimit) * 100) : 0;
+        $('rpmBar').style.width = Math.max(0, Math.min(100, rpmPct)) + '%';
+        $('rpdBar').style.width = Math.max(0, Math.min(100, rpdPct)) + '%';
+        $('rpmPct').textContent = rpmPct + '%';
+        $('rpdPct').textContent = rpdPct + '%';
+        $('routeUpdated').textContent = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+        const status = String(route.status || 'READY');
+        if (status === 'READY') setServiceState('Operational');
+        else if (status === 'COOLDOWN' || status === 'DEGRADED') setServiceState(status, 'warn');
+        else setServiceState(status, 'bad');
+        $('refreshLabel').textContent = 'refreshes every 10s';
+      } catch (error) {
+        setServiceState('Authentication required', 'warn');
+        $('refreshLabel').textContent = 'token needed';
+        if (error?.message === 'status 401' && !tokenInput.value.trim()) openAuthModal();
+      }
+    }
+
+    openAuthModal();
+    refreshStatus();
+    setInterval(refreshStatus, 10000);
+  </script>
+</body>
+</html>
