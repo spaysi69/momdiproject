@@ -1,0 +1,124 @@
+services:
+  - type: web
+    name: enrichment-router-api
+    runtime: node
+    plan: starter
+    buildCommand: npm install --no-audit --no-fund && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: enrichment-kv
+          property: connectionString
+      - key: APP_API_TOKEN
+        sync: false
+      - key: ADMIN_API_TOKEN
+        sync: false
+      - key: SEAMLESS_API_KEY_01
+        sync: false
+      - key: SEAMLESS_API_KEY_02
+        sync: false
+      - key: SEAMLESS_API_KEY_03
+        sync: false
+      - key: SEAMLESS_API_KEY_04
+        sync: false
+      - key: SEAMLESS_API_KEY_05
+        sync: false
+      - key: SEAMLESS_API_KEY_06
+        sync: false
+      - key: SEAMLESS_API_KEY_07
+        sync: false
+      - key: SEAMLESS_API_KEY_08
+        sync: false
+      - key: SEAMLESS_API_KEY_09
+        sync: false
+      - key: SEAMLESS_API_KEY_10
+        sync: false
+      - key: SEAMLESS_API_KEY_11
+        sync: false
+      - key: SEAMLESS_API_KEY_12
+        sync: false
+      - key: SEAMLESS_API_KEY_13
+        sync: false
+      - key: SEAMLESS_API_KEY_14
+        sync: false
+      - key: SEAMLESS_API_KEY_15
+        sync: false
+      - key: SEAMLESS_API_KEY_16
+        sync: false
+      - key: SEAMLESS_API_KEY_17
+        sync: false
+      - key: SEAMLESS_API_KEY_18
+        sync: false
+      - key: SEAMLESS_API_KEY_19
+        sync: false
+      - key: SEAMLESS_API_KEY_20
+        sync: false
+      - key: EGRESS_IP_CHECK_URL
+        value: https://api.ipify.org?format=json
+  - type: worker
+    name: enrichment-router-worker
+    runtime: node
+    plan: starter
+    buildCommand: npm install --no-audit --no-fund && npm run build
+    startCommand: node dist/src/worker.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: enrichment-kv
+          property: connectionString
+      - key: SEAMLESS_API_KEY_01
+        sync: false
+      - key: SEAMLESS_API_KEY_02
+        sync: false
+      - key: SEAMLESS_API_KEY_03
+        sync: false
+      - key: SEAMLESS_API_KEY_04
+        sync: false
+      - key: SEAMLESS_API_KEY_05
+        sync: false
+      - key: SEAMLESS_API_KEY_06
+        sync: false
+      - key: SEAMLESS_API_KEY_07
+        sync: false
+      - key: SEAMLESS_API_KEY_08
+        sync: false
+      - key: SEAMLESS_API_KEY_09
+        sync: false
+      - key: SEAMLESS_API_KEY_10
+        sync: false
+      - key: SEAMLESS_API_KEY_11
+        sync: false
+      - key: SEAMLESS_API_KEY_12
+        sync: false
+      - key: SEAMLESS_API_KEY_13
+        sync: false
+      - key: SEAMLESS_API_KEY_14
+        sync: false
+      - key: SEAMLESS_API_KEY_15
+        sync: false
+      - key: SEAMLESS_API_KEY_16
+        sync: false
+      - key: SEAMLESS_API_KEY_17
+        sync: false
+      - key: SEAMLESS_API_KEY_18
+        sync: false
+      - key: SEAMLESS_API_KEY_19
+        sync: false
+      - key: SEAMLESS_API_KEY_20
+        sync: false
+      - key: EGRESS_IP_CHECK_URL
+        value: https://api.ipify.org?format=json
+  - type: keyvalue
+    name: enrichment-kv
+    plan: starter
+    ipAllowList: []
+    maxmemoryPolicy: noeviction
+    persistenceMode: journal-snapshot

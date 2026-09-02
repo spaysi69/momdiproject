@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Enrichment Router</title>
+  <style>
+    :root { font-family: Inter, system-ui, sans-serif; color-scheme: dark; }
+    body { margin: 0; background: #0b0f14; color: #e8edf2; }
+    main { max-width: 1180px; margin: 0 auto; padding: 36px 20px; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
+    .card { background: #121821; border: 1px solid #273241; border-radius: 16px; padding: 22px; }
+    h1, h2 { margin: 0 0 8px; } p { color: #9eabb8; }
+    form { display: flex; gap: 10px; margin-top: 20px; }
+    input { flex: 1; min-width: 0; padding: 13px; border-radius: 10px; border: 1px solid #344252; background: #0d131a; color: #fff; }
+    button { padding: 12px 16px; border: 0; border-radius: 10px; background: #4f8cff; color: #fff; font-weight: 700; cursor: pointer; }
+    button.secondary { background: #273241; }
+    pre { white-space: pre-wrap; word-break: break-word; background: #0d131a; padding: 16px; border-radius: 10px; min-height: 80px; }
+    .muted { color: #8996a3; font-size: 13px; }
+    .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 860px; }
+    th, td { padding: 11px 10px; border-bottom: 1px solid #273241; text-align: left; white-space: nowrap; }
+    th { color: #9eabb8; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    .pill { display: inline-flex; padding: 4px 8px; border-radius: 999px; background: #273241; font-size: 12px; }
+    .ok { color: #7ee787; } .warn { color: #f2cc60; } .bad { color: #ff7b72; }
+  </style>
+</head>
+<body>
+<main class="grid">
+  <section class="card">
+    <h1>Profile Enrichment</h1>
+    <p>Submit a LinkedIn profile URL. Cached results are returned immediately; new work is queued for the worker.</p>
+    <form id="form">
+      <input id="url" type="url" required placeholder="https://www.linkedin.com/in/example" autocomplete="off" />
+      <button>Enrich</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <div class="toolbar">
+      <div>
+        <h2>Credential health</h2>
+        <div class="muted">Admin-only status. API keys themselves are never displayed.</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:10px;flex-wrap:wrap">
+        <button id="refresh" class="secondary">Refresh</button>
+      </div>
+    </div>
+    <div id="summary" class="muted" style="margin:14px 0">No status loaded.</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>ID</th><th>Status</th><th>Credential</th><th>Egress IP</th><th>IP Match</th><th>RPM</th><th>RPD</th><th>Priority</th><th>Latency</th><th>Cooldown</th></tr></thead>
+        <tbody id="routes"><tr><td colspan="10" class="muted">Enter an admin token to load status.</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="card">
+    <div id="status" class="muted">Ready.</div>
+    <pre id="result">No result yet.</pre>
+  </section>
+</main>
+<script>
+const form = document.getElementById('form');
+const url = document.getElementById('url');
+const status = document.getElementById('status');
+const result = document.getElementById('result');
+const routes = document.getElementById('routes');
+const summary = document.getElementById('summary');
+const refresh = document.getElementById('refresh');
+const token = sessionStorage.getItem('appToken') || prompt('Enter application token');
+const adminToken = sessionStorage.getItem('adminToken') || prompt('Enter admin token to view credential health (Cancel to skip)');
+if (token) sessionStorage.setItem('appToken', token);
+if (adminToken) sessionStorage.setItem('adminToken', adminToken);
+
+function esc(value) {
+  return String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+}
+
+function fmtIp(route) {
+  const ip = route.observedEgressIp || '—';
+  const expected = route.expectedEgressIp ? `expected ${route.expectedEgressIp}` : '';
+  return `${esc(ip)}${expected ? `<div class="muted">${esc(expected)}</div>` : ''}`;
+}
+
+async function loadStatus() {
+  if (!adminToken) return;
+  summary.textContent = 'Loading…';
+  try {
+    const res = await fetch('/admin/status', { headers: { Authorization: `Bearer ${adminToken}` } });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Status request failed (${res.status})`);
+    const list = data.routes || [];
+    const ready = list.filter(r => r.status === 'READY').length;
+    summary.textContent = `${list.length} credential${list.length === 1 ? '' : 's'} discovered · ${ready} ready · queue waiting ${data.queue?.waiting ?? 0}`;
+    routes.innerHTML = list.length ? list.map(r => {
+      const ipMatch = r.ipMatch === true ? '<span class="ok">YES</span>' : r.ipMatch === false ? '<span class="bad">NO</span>' : '<span class="muted">—</span>';
+      const statusClass = ['AUTH_FAILED','CREDITS_EXHAUSTED','DISABLED'].includes(r.status) ? 'bad' : r.status === 'COOLDOWN' || r.status === 'DEGRADED' ? 'warn' : 'ok';
+      return `<tr>
+        <td>${esc(r.routeId)}</td>
+        <td><span class="pill ${statusClass}">${esc(r.status)}</span></td>
+        <td>${r.credentialConfigured ? '<span class="ok">CONFIGURED</span>' : '<span class="bad">MISSING</span>'}</td>
+        <td>${fmtIp(r)}</td>
+        <td>${ipMatch}</td>
+        <td>${r.usage?.rpm ?? 0}/${r.limits?.rpm ?? '—'}</td>
+        <td>${r.usage?.rpd ?? 0}/${r.limits?.rpd ?? '—'}</td>
+        <td>${esc(r.priority)}</td>
+        <td>${r.lastLatencyMs == null ? '—' : `${r.lastLatencyMs} ms`}</td>
+        <td>${r.cooldownSeconds > 0 ? `${r.cooldownSeconds}s` : '—'}</td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="10" class="muted">No credentials discovered.</td></tr>';
+  } catch (err) {
+    summary.textContent = err.message;
+  }
+}
+
+async function getJob(id) {
+  for (let i = 0; i < 60; i++) {
+    const res = await fetch(`/api/v1/jobs/${encodeURIComponent(id)}`, { headers: { Authorization: `Bearer ${token}` } });
+    const data = await res.json();
+    result.textContent = JSON.stringify(data, null, 2);
+    if (data.status === 'completed' || data.status === 'failed') return;
+    await new Promise(r => setTimeout(r, 1000));
+  }
+  status.textContent = 'Still processing; check the job endpoint later.';
+}
+
+form.addEventListener('submit', async e => {
+  e.preventDefault();
+  if (!token) { status.textContent = 'Application token is required.'; return; }
+  status.textContent = 'Submitting…'; result.textContent = '';
+  try {
+    const res = await fetch('/api/v1/enrich', { method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ linkedinUrl: url.value }) });
+    const data = await res.json();
+    result.textContent = JSON.stringify(data, null, 2);
+    if (!res.ok) throw new Error(data.error || 'Request failed');
+    if (data.jobId) { status.textContent = `Queued: ${data.jobId}`; await getJob(data.jobId); }
+    else status.textContent = 'Completed from cache.';
+    void loadStatus();
+  } catch (err) { status.textContent = err.message; }
+});
+
+refresh.addEventListener('click', () => void loadStatus());
+void loadStatus();
+setInterval(() => void loadStatus(), 10000);
+</script>
+</body>
+</html>

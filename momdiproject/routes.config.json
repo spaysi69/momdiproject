@@ -1,0 +1,17 @@
+{
+  "service": "seamlessai",
+  "credentialDiscovery": {
+    "envPrefix": "SEAMLESS_API_KEY_",
+    "numericSuffixOnly": true,
+    "defaultLimits": { "rpm": 60, "rpd": 10000 },
+    "defaultPriority": 0,
+    "defaultEnabled": true
+  },
+  "network": {
+    "egressIpCheckUrl": "https://api.ipify.org?format=json",
+    "egressIpCheckTimeoutMs": 2500
+  },
+  "queue": { "enabled": true, "maxAttempts": 3, "jobTimeoutMs": 30000 },
+  "cache": { "enabled": true, "ttlSeconds": 86400 },
+  "routes": []
+}
