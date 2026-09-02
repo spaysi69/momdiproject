@@ -1,0 +1,41 @@
+{
+  "service": "seamlessai",
+  "providerBaseUrl": "https://api.seamless.ai/api/client/v1",
+  "apiKeyEnv": "SEAMLESS_API_KEY_PRIMARY",
+  "limits": {
+    "rpm": 60,
+    "rpd": 10000
+  },
+  "credits": {
+    "starting": 70
+  },
+  "routes": [
+    {
+      "id": "primary",
+      "apiKeyEnv": "SEAMLESS_API_KEY_PRIMARY",
+      "credits": 69,
+      "limits": {
+        "rpm": 60,
+        "rpd": 10000
+      },
+      "priority": 100,
+      "egressGroup": "egress-1"
+    },
+    {
+      "id": "secondary",
+      "apiKeyEnv": "SEAMLESS_API_KEY_SECONDARY",
+      "credits": 70,
+      "limits": {
+        "rpm": 60,
+        "rpd": 10000
+      },
+      "priority": 90,
+      "egressGroup": "egress-2"
+    }
+  ],
+  "maxAttempts": 2,
+  "requestTimeoutMs": 20000,
+  "pollIntervalMs": 1500,
+  "maxPolls": 10,
+  "cacheTtlSeconds": 86400
+}
