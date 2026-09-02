@@ -1,0 +1,12 @@
+{
+  "service": "seamlessai",
+  "providerBaseUrl": "https://api.seamless.ai/api/client/v1",
+  "apiKeyEnv": "SEAMLESS_API_KEY_PRIMARY",
+  "limits": { "rpm": 60, "rpd": 10000 },
+  "credits": { "starting": 69 },
+  "maxAttempts": 3,
+  "requestTimeoutMs": 30000,
+  "pollIntervalMs": 2500,
+  "maxPolls": 36,
+  "cacheTtlSeconds": 86400
+}
