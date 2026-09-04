@@ -1,0 +1,8 @@
+{
+  "service": "seamlessai",
+  "mcpBaseUrl": "https://mcp.seamless.ai/mcp",
+  "requestTimeoutMs": 30000,
+  "pollIntervalMs": 2000,
+  "maxPolls": 30,
+  "cacheTtlSeconds": 86400
+}
