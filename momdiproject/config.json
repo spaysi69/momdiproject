@@ -1,7 +1,0 @@
-{
-  "service": "seamlessai",
-  "apiBaseUrl": "https://api.seamless.ai/api/client/v1",
-  "requestTimeoutMs": 30000,
-  "pollIntervalMs": 2500,
-  "maxPolls": 30
-}
