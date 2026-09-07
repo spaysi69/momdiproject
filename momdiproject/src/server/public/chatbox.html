@@ -1,0 +1,37 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#080b14"><title>Beast · Enriching</title><link rel="stylesheet" href="/app.css"><script src="/app.js" defer></script></head><body>
+<aside class="sidebar">
+  <a class="brand" href="/" aria-label="Beast home"><span class="brand-mark">B</span><span class="brand-word">beast<span>.</span></span></a>
+  <div class="workspace-label">WORKSPACE</div>
+  <nav aria-label="Workspace">
+    <button class="nav active" id="enriching-nav" aria-current="page"><span class="nav-icon">✦</span><span>Enriching</span><span class="nav-active-dot"></span></button>
+    <button class="nav" id="prospecting-nav"><span class="nav-icon">⌕</span><span>Prospecting<small>Coming soon</small></span></button>
+  </nav>
+  <div class="sidebar-card"><div class="sidebar-card-icon">↗</div><strong>Search free.<br>Enrich intentionally.</strong><p>Choose the correct person before a research credit can be used.</p></div>
+  <div class="sidebar-bottom"><span>PROSPECTING BEAST</span><b id="build-label">Loading…</b></div>
+</aside>
+<div class="workspace">
+<header class="topbar"><div><div class="top-eyebrow">PROSPECTING BEAST</div><div class="page-title" id="page-label">Enrichment Studio</div></div><div class="header-right"><button id="credits" class="credit-pill" hidden><span class="credit-gem">◆</span><span id="credits-label">— credits</span></button><button id="connect" class="status-pill"><span class="status-dot"></span><span id="connection-label">Checking…</span></button><button id="logout" class="icon-button" title="Lock app" aria-label="Lock app">↗</button></div></header>
+
+<main id="enriching-view" class="main-view">
+  <section class="hero">
+    <div class="hero-copy"><div class="eyebrow"><span class="eyebrow-dot"></span> CONTACT ENRICHMENT</div><h1>Know who you’re enriching<br><span>before you spend a credit.</span></h1><p>Paste a LinkedIn profile. Beast performs a free Seamless contact search, shows the matching people with their company and role, then you choose exactly who to enrich.</p></div>
+    <div class="hero-badge"><span>0</span><div><strong>credits</strong><small>used for search</small></div></div>
+  </section>
+
+  <section class="search-panel">
+    <form id="chat-form" class="search-form"><label for="linkedin" class="sr-only">LinkedIn profile URL</label><div class="search-field"><span class="linkedin-badge">in</span><input id="linkedin" type="url" required autocomplete="off" spellcheck="false" placeholder="https://www.linkedin.com/in/person-name"><button type="submit" id="send"><span>Find contact</span><span>→</span></button></div></form>
+    <div class="search-assurance"><span><i>✓</i> Free contact search first</span><span><i>✓</i> Company + title before enrichment</span><span><i>✓</i> Saved results reused from Supabase</span></div>
+  </section>
+
+  <section id="results-shell" class="results-shell" hidden><div id="results"></div></section>
+  <section class="how-it-works" id="how-it-works"><div class="section-kicker">HOW IT WORKS</div><div class="steps"><div class="step"><span>01</span><div><strong>Paste the LinkedIn URL</strong><p>Beast checks Supabase and derives the profile identity.</p></div></div><div class="step"><span>02</span><div><strong>Review free search matches</strong><p>Name, company, title, location and LinkedIn are shown before research.</p></div></div><div class="step"><span>03</span><div><strong>Choose and enrich</strong><p>Only the contact you explicitly confirm is sent to research.</p></div></div></div></section>
+</main>
+
+<main id="prospecting-view" class="main-view" hidden><section class="coming"><div class="coming-orb">⌕</div><div class="eyebrow">NEXT WORKSPACE</div><h1>Prospecting is coming<span>.</span></h1><p>Build qualified lead lists from the same clean workflow.</p><button class="secondary-button" id="back">← Back to Enriching</button></section></main>
+</div>
+
+<dialog id="confirm-dialog" class="modal"><button class="modal-close" id="confirm-close" aria-label="Close">×</button><div class="modal-icon">✦</div><div class="eyebrow">CONFIRM RESEARCH</div><h2 id="confirm-name">Enrich this contact?</h2><p id="confirm-meta"></p><div class="credit-warning"><span>◆</span><div><strong>This is the credit-consuming step.</strong><small>Search was free. Seamless research may consume one research credit. Duplicate checking remains enabled where supported.</small></div></div><div class="modal-actions"><button id="confirm-cancel" class="secondary-button">Cancel</button><button id="confirm-submit" class="primary-button">Enrich this person →</button></div></dialog>
+
+<dialog id="credits-dialog" class="modal credits-modal"><button id="credits-close" class="modal-close" aria-label="Close">×</button><div class="modal-icon">◆</div><div class="eyebrow">SEAMLESS ROUTES</div><h2>Research credits & egress</h2><div id="credits-content"></div></dialog>
+<div id="toast" class="toast" role="status" hidden></div>
+</body></html>
