@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: prospecting-beast-v36
+    runtime: node
+    buildCommand: npm ci --no-audit --no-fund && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 24
+      - key: APP_AUTH_TOKEN
+        sync: false
+      - key: SEAMLESS_API_KEY_PRIMARY
+        sync: false
+      - key: SEAMLESS_API_KEY_SECONDARY
+        sync: false
+      - key: SEAMLESS_EGRESS_PROXY_PRIMARY
+        sync: false
+      - key: SEAMLESS_EGRESS_PROXY_SECONDARY
+        sync: false
+      - key: SEAMLESS_REQUIRE_UNIQUE_EGRESS
+        value: "true"
+      - key: SEAMLESS_EGRESS_CHECK_URL
+        value: https://api.ipify.org?format=json
+      - key: SEAMLESS_API_BASE_URL
+        value: https://api.seamless.ai/api/client/v1
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
