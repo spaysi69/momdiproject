@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: prospecting-beast-v29
+    runtime: node
+    buildCommand: npm ci --no-audit --no-fund && npm run build
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 24
+      - key: APP_AUTH_TOKEN
+        sync: false
+      - key: SEAMLESS_MCP_API_KEY
+        sync: false
+      - key: SEAMLESS_MCP_BASE_URL
+        value: https://mcp.seamless.ai/mcp
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
