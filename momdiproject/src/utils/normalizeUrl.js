@@ -1,3 +1,0 @@
-'use strict';
-function normalizeLinkedInUrl(input){let url;try{url=new URL(String(input||'').trim())}catch{throw new Error('Invalid URL')};if(url.protocol!=='https:')throw new Error('LinkedIn URL must use HTTPS');const h=url.hostname.toLowerCase();if(h!=='linkedin.com'&&h!=='www.linkedin.com')throw new Error('Invalid LinkedIn hostname');const m=url.pathname.match(/^\/in\/([^/]+)\/?$/i);if(!m)throw new Error('Expected a LinkedIn profile URL');let slug;try{slug=decodeURIComponent(m[1]).trim()}catch{throw new Error('Invalid LinkedIn profile slug')};if(!/^[a-zA-Z0-9][a-zA-Z0-9._-]*$/.test(slug))throw new Error('Invalid LinkedIn profile slug');return `https://www.linkedin.com/in/${slug}/`}
-module.exports={normalizeLinkedInUrl};
