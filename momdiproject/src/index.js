@@ -1,3 +1,0 @@
-'use strict';
-const http=require('node:http');const {createHandler}=require('./server/app');const {logger}=require('./utils/logger');
-const port=Number(process.env.PORT||3000);if(!Number.isInteger(port)||port<=0||port>65535)throw new Error(`Invalid PORT: ${process.env.PORT}`);const server=http.createServer(createHandler());server.listen(port,'0.0.0.0',()=>logger.info('server.started',{port}));function shutdown(signal){logger.info('server.shutdown',{signal});server.close(err=>{if(err){logger.error('server.shutdown_failed',{message:err.message});process.exitCode=1}process.exit()})}process.once('SIGTERM',()=>shutdown('SIGTERM'));process.once('SIGINT',()=>shutdown('SIGINT'));
