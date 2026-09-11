@@ -1,0 +1,42 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#070a12"><title>Beast · Enriching</title><link rel="stylesheet" href="/app.css"><script src="/app.js" defer></script></head><body>
+<aside class="sidebar">
+  <a class="brand" href="/" aria-label="Beast home"><span class="brand-mark">B</span><span class="brand-word">beast<span>.</span></span></a>
+  <div class="workspace-label">WORKSPACE</div>
+  <nav aria-label="Workspace"><button class="nav active" id="enriching-nav" aria-current="page"><span class="nav-icon">✦</span><span>Enriching</span><span class="nav-active-dot"></span></button><button class="nav" id="prospecting-nav"><span class="nav-icon">⌕</span><span>Prospecting<small>Employee discovery</small></span></button></nav>
+  <div class="sidebar-card"><div class="sidebar-card-icon">↕</div><strong>One-page workflow</strong><p>Each result becomes one slide. New contacts move into view automatically; scroll up for previous enrichments.</p></div>
+  <div class="sidebar-bottom"><span>PROSPECTING BEAST</span><b id="build-label">Loading…</b></div>
+</aside>
+<div class="workspace">
+  <header class="topbar"><div><div class="top-eyebrow">PROSPECTING BEAST</div><div class="page-title" id="page-label">Enrichment Studio</div></div><div class="header-right"><button id="diagnostics" class="status-pill diagnostic-pill"><span>◎</span><span>Audit</span></button><button id="credits" class="credit-pill" hidden><span class="credit-gem">◆</span><span id="credits-label">— credits</span></button><button id="connect" class="status-pill"><span class="status-dot"></span><span id="connection-label">Checking…</span></button><button id="logout" class="icon-button" title="Lock app" aria-label="Lock app">↗</button></div></header>
+  <main id="enriching-view" class="main-view studio-view">
+    <section class="studio-intro"><div><div class="eyebrow"><span class="eyebrow-dot"></span> EXACT LINKEDIN ENRICHMENT</div><h1>Paste. Enrich. <span>Done.</span></h1></div><p>Paste a LinkedIn profile and get a clean, ranked contact result without leaving the page. Previous enrichments remain one scroll above.</p></section>
+    <section class="composer"><form id="chat-form" class="search-form"><label for="linkedin" class="sr-only">LinkedIn profile URL</label><div class="search-field"><span class="linkedin-badge">in</span><input id="linkedin" type="url" required autocomplete="off" spellcheck="false" placeholder="https://www.linkedin.com/in/person-name"><button type="submit" id="send"><span>Enrich</span><span>→</span></button></div></form><div class="composer-meta"><span><i>✓</i> exact profile</span><span><i>✓</i> max 1 research POST</span><span><i>✓</i> PRIMARY first</span><span><i>✓</i> live org-credit snapshots</span></div></section>
+    <section id="result-feed" class="result-feed" aria-live="polite">
+      <article id="welcome-slide" class="result-slide welcome-slide"><div class="welcome-card"><div class="welcome-orb">✦</div><div><span>READY</span><h2>Your enriched contacts will appear here.</h2><p>Paste a LinkedIn profile above. When a result arrives, it slides into this panel automatically. Previous contacts stay one scroll above.</p></div></div></article>
+    </section>
+  </main>
+  <main id="prospecting-view" class="main-view prospect-view" hidden>
+    <section class="prospect-hero">
+      <div><div class="eyebrow"><span class="eyebrow-dot"></span> MULTI-SOURCE EMPLOYEE DISCOVERY</div><h1>Company in. <span>People out.</span></h1><p>Find current employees matching your target roles from public LinkedIn search evidence and OSINT sources. No Seamless enrichment is used here.</p></div>
+      <div class="prospect-engine-badge"><span>⌕</span><div><strong>PROSPECTING ENGINE</strong><small id="prospect-engine-status">Role-aware · adaptive · evidence-backed</small></div></div>
+    </section>
+    <section class="prospect-console">
+      <form id="prospect-form">
+        <div class="prospect-company-row"><label class="prospect-company-field"><span>COMPANY</span><input id="prospect-company" autocomplete="organization" placeholder="e.g. Siemens, Microsoft, Marriott" required></label><button id="prospect-start" type="submit"><span>Find employees</span><span>→</span></button></div>
+        <div class="role-mode-header"><div><span class="field-kicker">ROLE SET</span><div class="segment-control"><button type="button" class="segment active flagged" data-role-group="flagged"><span>🚨</span> Flagged</button><button type="button" class="segment" data-role-group="not_flagged"><span>✓</span> Not flagged</button></div></div><div class="role-actions"><button type="button" id="roles-all">Select all</button><button type="button" id="roles-none">Clear</button></div></div>
+        <div id="prospect-role-grid" class="prospect-role-grid"><div class="role-loading">Loading role intelligence…</div></div>
+        <div class="prospect-footnote"><span>Search strategy expands every selected role into its direct, synonymous and seniority variants.</span><span id="role-selection-count">—</span></div>
+      </form>
+    </section>
+    <section class="prospect-results-shell">
+      <div id="prospect-progress" class="prospect-progress empty"><div class="prospect-empty-icon">⌕</div><div><strong>Ready to prospect.</strong><span>Choose Flagged or Not Flagged, select the role families you want, then enter a company.</span></div></div>
+      <div id="prospect-summary" class="prospect-summary" hidden></div>
+      <div id="prospect-toolbar" class="prospect-toolbar" hidden><div class="prospect-search"><span>⌕</span><input id="prospect-filter" placeholder="Filter people, titles or roles"></div><select id="prospect-role-filter"><option value="">All roles</option></select><select id="prospect-confidence-filter"><option value="0">All confidence</option><option value="90">High confidence</option><option value="80">Likely current</option></select><button id="prospect-export" type="button" class="prospect-export">Export CSV</button></div>
+      <div id="prospect-results" class="prospect-results"></div>
+    </section>
+  </main>
+</div>
+<dialog id="diagnostics-dialog" class="modal diagnostics-modal"><button id="diagnostics-close" class="modal-close" aria-label="Close">×</button><div class="modal-icon">◎</div><div class="eyebrow">PROVIDER AUDIT</div><h2>Technical audit</h2><p class="fineprint">Optional troubleshooting trace for provider headers, route decisions, research/poll lifecycle and credit observations. It does not add any Seamless research calls.</p><div class="diagnostic-actions"><button id="diagnostics-copy" class="secondary-button">Copy audit</button><button id="diagnostics-download" class="secondary-button">Download JSON</button><button id="diagnostics-reset" class="secondary-button">Reset audit baseline</button></div><p id="diagnostics-summary" class="fineprint">Use only when you need to inspect provider behavior.</p></dialog>
+<dialog id="credits-dialog" class="modal credits-modal"><button id="credits-close" class="modal-close" aria-label="Close">×</button><div class="modal-icon">◆</div><div class="eyebrow">SEAMLESS BALANCE</div><h2>Research credits</h2><div id="credits-content"></div></dialog>
+<div id="toast" class="toast" role="status" hidden></div>
+</body></html>
